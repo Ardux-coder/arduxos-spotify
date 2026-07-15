@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ArduxOS · Spotify</title>
+<style>
+  body{font-family:system-ui,sans-serif;text-align:center;padding-top:3em;
+       background:#121212;color:#fff}
+  .g{color:#1db954}
+</style>
+</head>
+<body>
+<h2 id="msg">Collegamento ad <span class="g">ArduxOS</span>…</h2>
+<p id="sub">Tieni aperta questa pagina un istante.</p>
+<script>
+  // Relay OAuth conforme ai nuovi standard Spotify:
+  // Spotify redirige QUI (HTTPS, registrato in dashboard). Noi rimbalziamo
+  // il code al server locale della radxa via navigazione top-level https->http
+  // (permessa dai browser; NON e' mixed-content di subresource).
+  //
+  // Lo state ha forma  <nonce>~<ip-radxa>~<porta>  cosi' sappiamo dove tornare.
+  var q = new URLSearchParams(location.search);
+  var code = q.get("code");
+  var err = q.get("error");
+  var state = q.get("state") || "";
+  var parts = state.split("~");
+  var ip = parts[1], port = parts[2];
+  var msg = document.getElementById("msg");
+  var sub = document.getElementById("sub");
+
+  if (err) {
+    msg.textContent = "Accesso negato";
+    sub.textContent = err;
+  } else if (!code || !ip || !port) {
+    msg.textContent = "Parametri mancanti";
+    sub.textContent = "Riavvia il login dalla radxa.";
+  } else {
+    var url = "http://" + ip + ":" + port + "/callback"
+            + "?code=" + encodeURIComponent(code)
+            + "&state=" + encodeURIComponent(state);
+    sub.textContent = "Ritorno ad ArduxOS…";
+    location.replace(url);
+  }
+</script>
+</body>
+</html>
